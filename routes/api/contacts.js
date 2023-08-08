@@ -4,6 +4,9 @@ const express = require('express')
 
 const router = express.Router()
 
+const validationMessage =
+	'data validation error; name must contain between 2 and 30 alphanumeric characters; email must be a valid email address with @ sign and with 2 domain segments; phone must be a string containing 8 to 13 digits from 0 to 9'
+
 router.get('/', async (req, res, next) => {
 	const allContacts = await contacts.listContacts()
 	res.json({
@@ -47,6 +50,14 @@ router.post('/', async (req, res, next) => {
 	}
 
 	const contact = await contacts.addContact(req.body)
+
+	if (contact === 'not-validated')
+		return res.status(400).json({
+			status: 'error',
+			code: 400,
+			message: validationMessage,
+		})
+
 	res.status(201).json({
 		status: 'success',
 		code: 201,
@@ -96,6 +107,13 @@ router.put('/:contactId', async (req, res, next) => {
 			status: 'error',
 			code: 404,
 			message: 'contact not found',
+		})
+
+	if (contact === 'not-validated')
+		return res.status(400).json({
+			status: 'error',
+			code: 400,
+			message: validationMessage,
 		})
 
 	res.json({
