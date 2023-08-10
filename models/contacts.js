@@ -2,15 +2,8 @@ const fs = require('fs/promises')
 const path = require('path')
 const { all } = require('../app')
 const { v4: uuidv4 } = require('uuid')
-const Joi = require('joi')
 
 const contactsPath = path.join(__dirname, 'contacts.json')
-
-const schema = Joi.object({
-	name: Joi.string().alphanum().min(2).max(30),
-	email: Joi.string().email(),
-	phone: Joi.string().pattern(new RegExp('[0-9]{8,13}')),
-})
 
 const listContacts = async () => {
 	return fs
@@ -54,58 +47,39 @@ const removeContact = async contactId => {
 }
 
 const addContact = async body => {
-	const { name, email, phone } = body
-	const validationResult = schema.validate({
-		name: name,
-		email: email,
-		phone: phone,
-	})
-	if (!validationResult.error) {
-		const addContactToJson = contactsFromFile => {
-			const contact = { id: uuidv4(), ...body }
-			const contacts = JSON.parse(contactsFromFile)
-			contacts.push(contact)
-			fs.writeFile(contactsPath, JSON.stringify(contacts))
-			return contact
-		}
-		return fs
-			.readFile(contactsPath)
-			.then(contacts => addContactToJson(contacts))
-			.catch(err => err.message)
-	} else {
-		return 'not-validated'
+	const addContactToJson = contactsFromFile => {
+		const contact = { id: uuidv4(), ...body }
+		const contacts = JSON.parse(contactsFromFile)
+		contacts.push(contact)
+		fs.writeFile(contactsPath, JSON.stringify(contacts))
+		return contact
 	}
+
+	return fs
+		.readFile(contactsPath)
+		.then(contacts => addContactToJson(contacts))
+		.catch(err => err.message)
 }
 
 const updateContact = async (contactId, body) => {
 	const { name, email, phone } = body
-	const validationResult = schema.validate({
-		name: name,
-		email: email,
-		phone: phone,
-	})
-	if (!validationResult.error){
-		const updateContactInJson = contactsFromFile => {
-			const contacts = JSON.parse(contactsFromFile)
-			const [contact] = contacts.filter(contact => contact.id === contactId)
-			if (!contact) {
-				return null
-			} else {
-				contact.name = !name ? contact.name : name
-				contact.email = !email ? contact.email : email
-				contact.phone = !phone ? contact.phone : phone
-				fs.writeFile(contactsPath, JSON.stringify(contacts))
-				return contact
-			}
+	const updateContactInJson = contactsFromFile => {
+		const contacts = JSON.parse(contactsFromFile)
+		const [contact] = contacts.filter(contact => contact.id === contactId)
+		if (!contact) {
+			return null
+		} else {
+			contact.name = !name ? contact.name : name
+			contact.email = !email ? contact.email : email
+			contact.phone = !phone ? contact.phone : phone
+			fs.writeFile(contactsPath, JSON.stringify(contacts))
+			return contact
 		}
-		return fs
-			.readFile(contactsPath)
-			.then(contacts => updateContactInJson(contacts))
-			.catch(err => err.message)
-	}else{
-		return 'not-validated'
 	}
-	
+	return fs
+		.readFile(contactsPath)
+		.then(contacts => updateContactInJson(contacts))
+		.catch(err => err.message)
 }
 
 module.exports = {
