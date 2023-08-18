@@ -1,28 +1,34 @@
 const Contact = require('./schemas/contact')
 
-const getAllContacts = async () => {
-	return Contact.find()
-}
+const getAllContacts = async userId => Contact.find({ owner: userId })
 
-const getContactById = async id => {
-	return Contact.findOne({ _id: id })
-}
+const getContactsWithPagination = async (userId, page, limit) =>
+	Contact.find({ owner: userId })
+		.limit(limit)
+		.skip((page - 1) * limit)
 
-const createContact = async ({ name, email, phone }) => {
-	return Contact.create({ name, email, phone })
-}
+const getAllFavoriteContacts = async (userId, favorite) =>
+	Contact.find({ owner: userId, favorite: favorite })
 
-const updateContact = async (id, fields) => {
-	return Contact.findByIdAndUpdate({ _id: id }, fields, { new: true })
-}
+const getFavoriteContactsWithPagination = async (userId, favorite, page, limit) =>
+	Contact.find({ owner: userId, favorite: favorite })
+		.limit(limit)
+		.skip((page - 1) * limit)
 
-const updateStatusContact = async (id, favorite) => {
-	return Contact.findByIdAndUpdate({ _id: id }, { favorite: favorite }, { new: true })
-}
+const getContactById = async (contactId, userId) =>
+	Contact.findOne({ _id: contactId, owner: userId })
 
-const removeContact = async id => {
-	return Contact.findByIdAndRemove({ _id: id })
-}
+const createContact = async ({ name, email, phone, owner }) =>
+	Contact.create({ name, email, phone, owner })
+
+const updateContact = async (contactId, fields, userId) =>
+	Contact.findOneAndUpdate({ _id: contactId, owner: userId }, fields, { new: true })
+
+const updateStatusContact = async (contactId, favorite, userId) =>
+	Contact.findOneAndUpdate({ _id: contactId, owner: userId }, { favorite: favorite }, { new: true })
+
+const removeContact = async (contactId, userId) =>
+	Contact.findOneAndRemove({ _id: contactId, owner: userId })
 
 module.exports = {
 	getAllContacts,
@@ -30,5 +36,8 @@ module.exports = {
 	removeContact,
 	createContact,
 	updateContact,
+	getContactsWithPagination,
 	updateStatusContact,
+	getAllFavoriteContacts,
+	getFavoriteContactsWithPagination,
 }

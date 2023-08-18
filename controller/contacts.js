@@ -15,8 +15,27 @@ const updateSchema = Joi.object({
 })
 
 const getAll = async (req, res, next) => {
+	const userId = req.user._id
+	const { favorite, page, limit } = req.query
+	let allContacts = []
 	try {
-		const allContacts = await service.getAllContacts()
+		if (!favorite) {
+			allContacts =
+				!page || !limit
+					? await service.getAllContacts(userId)
+					: await service.getContactsWithPagination(userId, req.query.page, req.query.limit)
+		} else {
+			allContacts =
+				!page || !limit
+					? await service.getAllFavoriteContacts(userId, favorite)
+					: await service.getFavoriteContactsWithPagination(
+							userId,
+							favorite,
+							req.query.page,
+							req.query.limit
+					  )
+		}
+
 		res.json({
 			status: 'success',
 			code: 200,
@@ -31,9 +50,10 @@ const getAll = async (req, res, next) => {
 }
 
 const getById = async (req, res, next) => {
+	const userId = req.user._id
 	const { contactId } = req.params
 	try {
-		const contact = await service.getContactById(contactId)
+		const contact = await service.getContactById(contactId, userId)
 
 		if (!contact)
 			return res.status(404).json({
@@ -55,7 +75,8 @@ const getById = async (req, res, next) => {
 	}
 }
 
-const post = async (req, res, next) => {
+const create = async (req, res, next) => {
+	const owner = req.user._id
 	const { name, email, phone } = req.body
 
 	const validationResult = addSchema.validate({
@@ -66,7 +87,7 @@ const post = async (req, res, next) => {
 
 	if (!validationResult.error) {
 		try {
-			const contact = await service.createContact({ name, email, phone })
+			const contact = await service.createContact({ name, email, phone, owner })
 
 			res.status(201).json({
 				status: 'success',
@@ -90,9 +111,10 @@ const post = async (req, res, next) => {
 }
 
 const remove = async (req, res, next) => {
+	const userId = req.user._id
 	const { contactId } = req.params
 	try {
-		const contact = await service.removeContact(contactId)
+		const contact = await service.removeContact(contactId, userId)
 
 		if (!contact)
 			return res.status(404).json({
@@ -116,6 +138,7 @@ const remove = async (req, res, next) => {
 }
 
 const modify = async (req, res, next) => {
+	const userId = req.user._id
 	const { contactId } = req.params
 	const body = req.body
 	const { name, email, phone } = body
@@ -135,7 +158,7 @@ const modify = async (req, res, next) => {
 
 	if (!validationResult.error) {
 		try {
-			const contact = await service.updateContact(contactId, body)
+			const contact = await service.updateContact(contactId, body, userId)
 
 			if (!contact)
 				return res.status(404).json({
@@ -166,6 +189,7 @@ const modify = async (req, res, next) => {
 }
 
 const setFavourite = async (req, res, next) => {
+	const userId = req.user._id
 	const { contactId } = req.params
 	const { favorite } = req.body
 	if (favorite === undefined)
@@ -176,7 +200,7 @@ const setFavourite = async (req, res, next) => {
 		})
 
 	try {
-		const contact = await service.updateStatusContact(contactId, favorite)
+		const contact = await service.updateStatusContact(contactId, favorite, userId)
 		if (!contact)
 			return res.status(404).json({
 				status: 'error',
@@ -201,7 +225,7 @@ const setFavourite = async (req, res, next) => {
 module.exports = {
 	getAll,
 	getById,
-	post,
+	create,
 	remove,
 	modify,
 	setFavourite,
