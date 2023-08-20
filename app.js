@@ -2,7 +2,8 @@ const express = require('express')
 const logger = require('morgan')
 const cors = require('cors')
 
-const contactsRouter = require('./api/index')
+const contactsRouter = require('./api/contacts')
+const usersRouter = require('./api/users')
 
 const app = express()
 
@@ -14,6 +15,7 @@ app.use(express.json())
 require('./config/config-passport')
 
 app.use('/api/contacts', contactsRouter)
+app.use('/api/users', usersRouter)
 
 app.use((req, res) => {
 	res.status(404).json({ status: 'error', code: 404, message: 'Not found' })
