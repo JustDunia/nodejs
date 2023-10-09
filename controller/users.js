@@ -7,7 +7,7 @@ const User = require('../service/schemas/user')
 const path = require('path')
 const storeImage = path.join(process.cwd(), 'public/avatars')
 const fs = require('fs').promises
-var Jimp = require('jimp')
+const Jimp = require('jimp')
 
 const schema = Joi.object({
 	password: Joi.string().min(8).max(30).required(),
