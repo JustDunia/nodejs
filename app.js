@@ -17,6 +17,8 @@ require('./config/config-passport')
 app.use('/api/contacts', contactsRouter)
 app.use('/api/users', usersRouter)
 
+app.use(express.static('public'))
+
 app.use((req, res) => {
 	res.status(404).json({ status: 'error', code: 404, message: 'Not found' })
 })
