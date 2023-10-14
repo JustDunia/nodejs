@@ -4,6 +4,10 @@ const Joi = require('joi')
 const jwt = require('jsonwebtoken')
 const SECRET = process.env.SECRET
 const User = require('../service/schemas/user')
+const path = require('path')
+const storeImage = path.join(process.cwd(), 'public/avatars')
+const fs = require('fs').promises
+const Jimp = require('jimp')
 
 const schema = Joi.object({
 	password: Joi.string().min(8).max(30).required(),
@@ -30,6 +34,7 @@ const register = async (req, res, next) => {
 
 			const newUser = new User({ email })
 			newUser.setPassword(password)
+			newUser.generateAvatar(email)
 			const result = await service.createUser(newUser)
 			res.status(201).json({
 				status: 'success',
@@ -140,10 +145,34 @@ const setSubscription = async (req, res, next) => {
 	}
 }
 
+const changeAvatar = async (req, res, next) => {
+	const id = req.user.id
+	const { path: temporaryName, originalname } = req.file
+	const fileName = path.join(storeImage, originalname)
+	try {
+		Jimp.read(temporaryName, (err, img) => {
+			if (err) throw err
+			img.resize(250, 250).quality(60).write(fileName)
+		})
+		fs.unlink(temporaryName)
+		const user = await service.changeAvatar(id, fileName)
+		res.json({
+			status: 'success',
+			code: 200,
+			avatarURL: user.avatarURL,
+		})
+	} catch (e) {
+		await fs.unlink(temporaryName)
+		console.error(e)
+		next(e)
+	}
+}
+
 module.exports = {
 	register,
 	login,
 	logout,
 	getCurrentUser,
 	setSubscription,
+	changeAvatar,
 }

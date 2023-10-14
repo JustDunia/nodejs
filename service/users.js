@@ -13,6 +13,9 @@ const removeToken = async id => User.findByIdAndUpdate({ _id: id }, { token: nul
 const changeSubscription = async (id, sub) =>
 	User.findByIdAndUpdate({ _id: id }, { subscription: sub }, { new: true, runValidators: true })
 
+const changeAvatar = async (id, url) =>
+	User.findByIdAndUpdate({ _id: id }, { avatarURL: url }, { new: true, runValidators: true })
+
 module.exports = {
 	createUser,
 	getUserByEmail,
@@ -20,4 +23,5 @@ module.exports = {
 	removeToken,
 	getUserById,
 	changeSubscription,
+	changeAvatar,
 }
