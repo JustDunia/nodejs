@@ -1,6 +1,7 @@
 const { default: mongoose } = require('mongoose')
 const bCrypt = require('bcrypt')
 const gravatar = require('gravatar')
+const { v4: uuid } = require('uuid')
 
 const { Schema, model } = mongoose
 
@@ -28,6 +29,14 @@ const users = new Schema(
 			type: String,
 			default: null,
 		},
+		verify: {
+			type: Boolean,
+			default: false,
+		},
+		verificationToken: {
+			type: String,
+			required: [true, 'Verify token is required'],
+		},
 	},
 	{ versionKey: false, timestamps: true }
 )
@@ -40,6 +49,10 @@ users.methods.validatePassword = function (password) {
 }
 users.methods.generateAvatar = function (email) {
 	this.avatarURL = gravatar.url(email, { protocol: 'http', s: '100' })
+}
+
+users.methods.generateVerificationToken = function () {
+	this.verificationToken = uuid()
 }
 
 const User = model('users', users)
