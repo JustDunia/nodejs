@@ -10,15 +10,19 @@ const fs = require('fs').promises
 const Jimp = require('jimp')
 const sendEmail = require('../config/config-nodemailer')
 
-const schema = Joi.object({
+const loginSchema = Joi.object({
 	password: Joi.string().min(8).max(30).required(),
+	email: Joi.string().email().required(),
+})
+
+const emailSchema = Joi.object({
 	email: Joi.string().email().required(),
 })
 
 const register = async (req, res, next) => {
 	const { email, password } = req.body
 
-	const validationResult = schema.validate({
+	const validationResult = loginSchema.validate({
 		email: email,
 		password: password,
 	})
@@ -47,8 +51,9 @@ const register = async (req, res, next) => {
 					user: { email: result.email, subscription: result.subscription },
 				},
 			})
-		} catch (error) {
-			next(error)
+		} catch (e) {
+			console.error(e)
+			next(e)
 		}
 	} else {
 		return res.status(400).json({
@@ -62,7 +67,7 @@ const register = async (req, res, next) => {
 const login = async (req, res, next) => {
 	const { email, password } = req.body
 
-	const validationResult = schema.validate({
+	const validationResult = loginSchema.validate({
 		email: email,
 		password: password,
 	})
@@ -70,12 +75,20 @@ const login = async (req, res, next) => {
 	if (!validationResult.error) {
 		try {
 			const user = await service.getUserByEmail(email)
-			if (!user || !user.validatePassword(password))
-				res.status(401).json({
+			if (!user || !user.validatePassword(password)) {
+				return res.status(401).json({
 					status: 'error',
 					code: 401,
 					message: 'Email or password is wrong',
 				})
+			}
+			if (!user.verify) {
+				return res.status(401).json({
+					status: 'error',
+					code: 401,
+					message: 'Email address not verified',
+				})
+			}
 
 			const payload = {
 				id: user.id,
@@ -94,8 +107,9 @@ const login = async (req, res, next) => {
 					user: { email: user.email, subscription: user.subscription },
 				},
 			})
-		} catch (error) {
-			next(error)
+		} catch (e) {
+			console.error(e)
+			next(e)
 		}
 	} else {
 		return res.status(400).json({
@@ -111,8 +125,9 @@ const logout = async (req, res, next) => {
 	try {
 		await service.removeToken(id)
 		res.status(204).send()
-	} catch (error) {
-		next(error)
+	} catch (e) {
+		console.error(e)
+		next(e)
 	}
 }
 
@@ -194,6 +209,49 @@ const verifyEmail = async (req, res, next) => {
 	}
 }
 
+const resendEmail = async (req, res, next) => {
+	const { email } = req.body
+
+	const validationResult = emailSchema.validate({
+		email: email,
+	})
+
+	if (!validationResult.error) {
+		try {
+			const user = await service.getUserByEmail(email)
+			if (!user) {
+				return res.status(401).json({
+					status: 'error',
+					code: 401,
+					message: 'Email address not found',
+				})
+			}
+			if (user.verify) {
+				return res.status(400).json({
+					status: 'error',
+					code: 400,
+					message: 'Verification has already been passed',
+				})
+			} else {
+				sendEmail(email, user.verificationToken)
+				res.status(200).json({
+					status: 'success',
+					code: 200,
+					message: 'Verification email sent',
+				})
+			}
+		} catch (error) {
+			next(error)
+		}
+	} else {
+		return res.status(400).json({
+			status: 'error',
+			code: 400,
+			message: validationResult.error.message,
+		})
+	}
+}
+
 module.exports = {
 	register,
 	login,
@@ -202,4 +260,5 @@ module.exports = {
 	setSubscription,
 	changeAvatar,
 	verifyEmail,
+	resendEmail,
 }

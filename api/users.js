@@ -11,5 +11,6 @@ router.get('/current', auth, usersController.getCurrentUser)
 router.patch('/avatars', [auth, upload.single()], usersController.changeAvatar)
 router.patch('/', auth, usersController.setSubscription)
 router.get('/verify/:verificationToken', usersController.verifyEmail)
+router.post('/verify', usersController.resendEmail)
 
 module.exports = router

@@ -18,8 +18,8 @@ const sendEmail = (email, verificationToken) => {
 	const emailOptions = {
 		from: 'dunixdunix832@gmail.com',
 		to: email,
-		subject: 'Rejestracja w serwisie',
-		html: `Aby dokończyć rejestrację, zweryfikuj adres e-mail.<br><button><a href="${verificationLink}">POTWIERDŹ EMAIL</a></button>`,
+		subject: 'Registration to Dunix.com',
+		html: `To finish the registration process, please click the button to verify your email address.<br><button><a href="${verificationLink}">VERIFY</a></button>`,
 	}
 
 	transporter
