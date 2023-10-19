@@ -16,9 +16,9 @@ const transporter = nodemailer.createTransport({
 const sendEmail = (email, verificationToken) => {
 	const verificationLink = `http://localhost:${PORT}/api/users/verify/${verificationToken}`
 	const emailOptions = {
-		from: 'dunixdunix832@gmail.com',
+		from: MAILER_USER,
 		to: email,
-		subject: 'Registration to Dunix.com',
+		subject: 'Account verification',
 		html: `To finish the registration process, please click the button to verify your email address.<br><button><a href="${verificationLink}">VERIFY</a></button>`,
 	}
 
