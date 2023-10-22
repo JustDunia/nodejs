@@ -10,11 +10,17 @@ const addToken = async (email, token) => User.findOneAndUpdate({ email: email },
 
 const removeToken = async id => User.findByIdAndUpdate({ _id: id }, { token: null })
 
-const changeSubscription = async (id, sub) =>
+const updateSubscription = async (id, sub) =>
 	User.findByIdAndUpdate({ _id: id }, { subscription: sub }, { new: true, runValidators: true })
 
-const changeAvatar = async (id, url) =>
+const updateAvatar = async (id, url) =>
 	User.findByIdAndUpdate({ _id: id }, { avatarURL: url }, { new: true, runValidators: true })
+
+const verifyEmail = async verificationToken =>
+	User.findOneAndUpdate(
+		{ verificationToken: verificationToken },
+		{ verify: true, verificationToken: null }
+	)
 
 module.exports = {
 	createUser,
@@ -22,6 +28,7 @@ module.exports = {
 	addToken,
 	removeToken,
 	getUserById,
-	changeSubscription,
-	changeAvatar,
+	updateSubscription,
+	updateAvatar,
+	verifyEmail,
 }
